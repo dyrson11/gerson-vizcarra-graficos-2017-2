@@ -3,12 +3,14 @@ GLuint colorProgram;
 GLuint lightingProgram;
 GLuint x_axis, y_axis, z_axis;
 GLuint x_axis_norm, y_axis_norm, z_axis_norm;
-GLuint floor_buffer_normal;  /* vertex buffer object id for floor */
+GLuint floor_buffer_normal;
+GLuint floor_buffer_normal_texture;
 GLuint floor_buffer_color;
-GLuint floor_buffer_texture;
+GLuint floor_buffer_color_texture;
 GLuint sphere_buffer_flat_normal;
 GLuint sphere_buffer_smooth_normal;
 GLuint sphere_buffer_color;
+GLuint  texture;
 
 
 // Projection transformation parameters
@@ -37,6 +39,7 @@ vec3 cube_colors[100];
 const int floor_NumVertices = 6; //(1 face)(2 triangles/face)(3 vertices/triangle)
 vec3 floor_points[floor_NumVertices]; // positions for all vertices
 vec3 floor_colors[floor_NumVertices]; // colors for all vertices
+vec2 floor_texture[floor_NumVertices];
 vec3 fn(0, 1, 0);
 vec3 an(0, 1, 0);
 vec3 floor_normals[] = {fn, fn, fn, fn, fn, fn};
@@ -63,6 +66,7 @@ static int submenu0_id;
 static int submenu1_id;
 static int submenu2_id;
 static int submenu3_id;
+static int submenu4_id;
 
 static int value = 0;
 
@@ -70,6 +74,7 @@ bool lighting = false;
 bool wireFrame = false;
 bool flatShading = false;
 bool pLight = false;
+bool tex = false;
 int fogOption = 0;
 
 

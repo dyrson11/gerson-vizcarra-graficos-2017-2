@@ -54,9 +54,9 @@ void floor()
 	floor_colors[4] = vertex_colors[3]; floor_points[4] = vec3(-5, 0, -4);
 	floor_colors[5] = vertex_colors[3]; floor_points[5] = vec3(-5, 0, 8);
 
-	floor_texture[0] = vec2(1.25f, 1.5f); floor_texture[3] = vec2(1.25f, 1.5f);
-	floor_texture[1] = vec2(1.25f, 0.0f); floor_texture[4] = vec2(0.0f, 0.0f);
-	floor_texture[2] = vec2(0.0f, 0.0f); floor_texture[5] = vec2(0.0f, 1.5f);
+	floor_texture[0] = vec2(0.0f, 0.0f); floor_texture[3] = vec2(0.0f, 0.0f);
+	floor_texture[1] = vec2(0.0f, 1.5f); floor_texture[4] = vec2(1.25f, 1.5f);
+	floor_texture[2] = vec2(1.25f, 1.5f); floor_texture[5] = vec2(1.25f, 0.0f);
 }
 
 void lines()
