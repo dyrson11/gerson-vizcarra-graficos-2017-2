@@ -14,8 +14,10 @@
 
 in  vec3 vPosition;
 in  vec3 vColor;
+in  vec2 vTexCoord;
 varying out vec4 color;
 varying out vec4 fragPos;
+varying out vec2 texCoord;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -28,4 +30,5 @@ void main()
     gl_Position = projection * view * model * vPosition4;
     fragPos = view * model * vPosition4;
     color = vColor4;
+    texCoord = vTexCoord;
 }

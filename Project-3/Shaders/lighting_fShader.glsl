@@ -51,9 +51,13 @@ float FogDensity = 0.09;
 float fogFactor, dist;
 in vec3 FragPos;
 in vec3 Normal;
+in vec2 texCoord;
+
 uniform vec3 globalAmbientLight;
 uniform vec3 viewPos;
 uniform bool pLight;
+uniform bool ground;
+uniform sampler2D texture;
 uniform DirLight dirLight;
 uniform PointLight pointLight;
 uniform SpotLight spotLight;
@@ -140,6 +144,8 @@ void main()
     // phase 3: spot light
     result = result + globalAmbientLight * material.ambient;
     FragColor = vec4(result, 1.0);
+    if(ground)
+        FragColor = FragColor * texture2D( texture, texCoord );
 
     dist = length(FragPos);
     if(fogOption == 1)//linear fog
