@@ -12,7 +12,10 @@ using namespace Angel;
 void init()
 {
 	image_set_up();
-	GLuint  texture;
+	glPixelStoref(GL_UNPACK_ALIGNMENT, 1);
+	glGenTextures(1, &texture);
+
+	glActiveTexture(GL_TEXTURE0);
 
 	glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
 	// set the texture wrapping parameters
@@ -22,9 +25,8 @@ void init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, Image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ImageWidth, ImageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, Image);
+    //glGenerateMipmap(GL_TEXTURE_2D);
 
 
 	glGenBuffers(1, &sphere_buffer_color);
@@ -99,6 +101,17 @@ void init()
 	glBufferSubData(GL_ARRAY_BUFFER, sizeof(floor_points), sizeof(floor_colors),
 		floor_colors);
 
+	glGenBuffers(1, &floor_buffer_color_texture);
+	glBindBuffer(GL_ARRAY_BUFFER, floor_buffer_color_texture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(floor_points) + sizeof(floor_colors) +
+		sizeof(floor_texture), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(floor_points), floor_points);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(floor_points), sizeof(floor_colors),
+		floor_colors);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(floor_points) + sizeof(floor_colors),
+		sizeof(floor_texture), floor_texture);
+
+
 	glGenBuffers(1, &floor_buffer_normal);
 	glBindBuffer(GL_ARRAY_BUFFER, floor_buffer_normal);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(floor_points) + sizeof(floor_normals),
@@ -107,13 +120,15 @@ void init()
 	glBufferSubData(GL_ARRAY_BUFFER, sizeof(floor_points), sizeof(floor_normals),
 		floor_normals);
 
-	glGenBuffers(1, &floor_buffer_texture);
-	glBindBuffer(GL_ARRAY_BUFFER, floor_buffer_texture);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(floor_points) + sizeof(floor_texture),
-		NULL, GL_STATIC_DRAW);
+	glGenBuffers(1, &floor_buffer_normal_texture);
+	glBindBuffer(GL_ARRAY_BUFFER, floor_buffer_normal_texture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(floor_points) + sizeof(floor_normals) +
+		sizeof(floor_texture), NULL, GL_STATIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(floor_points), floor_points);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(floor_points), sizeof(floor_texture),
-		floor_texture);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(floor_points), sizeof(floor_normals),
+		floor_normals);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(floor_points) + sizeof(floor_normals),
+		sizeof(floor_texture), floor_texture);
 
 	//LOAD SHADERS
 	lightingProgram = InitShader("../Shaders/lighting_vShader.glsl", "../Shaders/lighting_fShader.glsl");
@@ -126,8 +141,6 @@ void init()
     glEnable(GL_LIGHTING);
     glEnable(GL_COLOR_MATERIAL);
     glDisable(GL_CULL_FACE);
-
-
 }
 
 void drawObj(GLuint buffer, int num_vertices)
@@ -142,15 +155,22 @@ void drawObj(GLuint buffer, int num_vertices)
 		glEnableVertexAttribArray(vPosition);
 		glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0,
 			BUFFER_OFFSET(0));
+
 		GLuint vNormal = glGetAttribLocation(lightingProgram, "vNormal");
 		glEnableVertexAttribArray(vNormal);
 		glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0,
-			BUFFER_OFFSET(sizeof(vec2) * num_vertices));
-		GLuint vTexture = glGetAttribLocation(lightingProgram, "vTexture");
+			BUFFER_OFFSET(sizeof(vec3) * num_vertices));
+
+		GLuint vTexture = glGetAttribLocation(lightingProgram, "vTexCoord");
 		glEnableVertexAttribArray(vTexture);
+		glVertexAttribPointer(vTexture, 2, GL_FLOAT, GL_FALSE, 0,
+			BUFFER_OFFSET(sizeof(vec3) * num_vertices * 2));
+
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
+
 		glDisableVertexAttribArray(vPosition);
 	    glDisableVertexAttribArray(vNormal);
+		glDisableVertexAttribArray(vTexture);
 	}
 	else
 	{
@@ -163,9 +183,17 @@ void drawObj(GLuint buffer, int num_vertices)
 		glEnableVertexAttribArray(vColor);
 		glVertexAttribPointer(vColor, 3, GL_FLOAT, GL_FALSE, 0,
 			BUFFER_OFFSET(sizeof(vec3) * num_vertices));
+
+		GLuint vTexture = glGetAttribLocation(colorProgram, "vTexCoord");
+		glEnableVertexAttribArray(vTexture);
+		glVertexAttribPointer(vTexture, 2, GL_FLOAT, GL_FALSE, 0,
+			BUFFER_OFFSET(sizeof(vec3) * num_vertices * 2));
+
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
+
 		glDisableVertexAttribArray(vPosition);
 	    glDisableVertexAttribArray(vColor);
+		glDisableVertexAttribArray(vTexture);
 	}
 
 }
@@ -178,7 +206,7 @@ void display(void)
 	GLuint  projection;  // projection matrix uniform shader variable location
 	GLuint  viewPos;
 	GLuint  option;
-	GLuint  texture;
+	GLuint  optTex;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -190,9 +218,7 @@ void display(void)
 	    imodel = glGetUniformLocation(lightingProgram, "imodel");
 	    view = glGetUniformLocation(lightingProgram, "view");
 		projection = glGetUniformLocation(lightingProgram, "projection");
-		option = glGetUniformLocation(colorProgram, "fogOption");
-		unsigned int texture;
-		glGenTextures(1, &texture);
+		option = glGetUniformLocation(lightingProgram, "fogOption");
 
 		mat4  p = Perspective(fovy, aspect, zNear, zFar);
 
@@ -210,6 +236,9 @@ void display(void)
 	    glUniformMatrix4fv(imodel, 1, GL_TRUE, im);
 		glUniformMatrix4fv(projection, 1, GL_TRUE, p); // GL_TRUE: matrix is row-major
 		glUniform1i(glGetUniformLocation(lightingProgram, "fogOption"), fogOption);
+		glUniform1i(glGetUniformLocation(lightingProgram, "texture"), 0);
+		glUniform1i(glGetUniformLocation(lightingProgram, "ground"), false);
+
 
 		if (wireFrame == 0) // Filled cube
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -278,7 +307,15 @@ void display(void)
 	    glUniform3f(glGetUniformLocation(lightingProgram, "material.ambient"), 0.2f, 0.2f, 0.2f);
 	    glUniform3f(glGetUniformLocation(lightingProgram, "material.diffuse"), 0.0f, 1.0f, 0.0f);
 	    glUniform3f(glGetUniformLocation(lightingProgram, "material.specular"), 0.0f, 0.0f, 0.0f);
-		drawObj(floor_buffer_normal, floor_NumVertices);  // draw the floor
+		if(tex)
+		{
+			glUniform1i(glGetUniformLocation(lightingProgram, "ground"), true);
+			drawObj(floor_buffer_normal_texture, floor_NumVertices);
+		}
+		else
+		{
+			drawObj(floor_buffer_normal, floor_NumVertices);
+		}
 
 	    glUniform3f(glGetUniformLocation(lightingProgram, "material.diffuse"), 1.0f, 0.0f, 0.0f);
 	    drawObj(x_axis_norm, 3);
@@ -295,7 +332,6 @@ void display(void)
 		model = glGetUniformLocation(colorProgram, "model");
 	    view = glGetUniformLocation(colorProgram, "view");
 		projection = glGetUniformLocation(colorProgram, "projection");
-		option = glGetUniformLocation(colorProgram, "fogOption");
 
 		mat4  p = Perspective(fovy, aspect, zNear, zFar);
 		vec4 at(-7.0, -3.0, 10.0, 0.0);
@@ -312,6 +348,8 @@ void display(void)
 	    glUniformMatrix4fv(view, 1, GL_TRUE, v);
 		glUniformMatrix4fv(projection, 1, GL_TRUE, p);
 		glUniform1i(glGetUniformLocation(colorProgram, "fogOption"), fogOption);
+		glUniform1i(glGetUniformLocation(colorProgram, "ground"), false);
+		glUniform1i(glGetUniformLocation(colorProgram, "texture"), 0);
 
 		if (wireFrame == 0) // Filled cube
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -332,7 +370,15 @@ void display(void)
 		else              // Wireframe floor
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-		drawObj(floor_buffer_color, floor_NumVertices);
+		if(tex)
+		{
+			glUniform1i(glGetUniformLocation(colorProgram, "ground"), true);
+			drawObj(floor_buffer_color_texture, floor_NumVertices);
+		}
+		else
+		{
+			drawObj(floor_buffer_color, floor_NumVertices);
+		}
 
 		glUniform3f(glGetUniformLocation(colorProgram, "vColor"), 1.0f, 0.0f, 0.0f);
 	    drawObj(x_axis, 3);
@@ -490,6 +536,12 @@ void menu(int num)
 		case 14:
 			fogOption = 3;
 			break;
+		case 15:
+			tex = false;
+			break;
+		case 16:
+			tex = true;
+			break;
 		default:
 			value = num;
 
@@ -500,26 +552,30 @@ void menu(int num)
 //------------------------------------------------
 void createMenu(void) {
 	submenu_id = glutCreateMenu(menu);
-	glutAddMenuEntry("NO", 3);
-	glutAddMenuEntry("YES", 4);
+	glutAddMenuEntry("No", 3);
+	glutAddMenuEntry("Yes", 4);
 
 	submenu0_id = glutCreateMenu(menu);
-	glutAddMenuEntry("flat shading", 7);
-	glutAddMenuEntry("smooth shading", 8);
+	glutAddMenuEntry("Flat Shading", 7);
+	glutAddMenuEntry("Smooth Shading", 8);
 
 	submenu1_id = glutCreateMenu(menu);
-	glutAddMenuEntry("spot light", 9);
-	glutAddMenuEntry("point source", 10);
+	glutAddMenuEntry("Spot Light", 9);
+	glutAddMenuEntry("Point Source", 10);
 
 	submenu2_id = glutCreateMenu(menu);
-	glutAddMenuEntry("NO", 5);
-	glutAddMenuEntry("YES", 6);
+	glutAddMenuEntry("No", 5);
+	glutAddMenuEntry("Yes", 6);
 
 	submenu3_id = glutCreateMenu(menu);
 	glutAddMenuEntry("No fog", 11);
 	glutAddMenuEntry("Linear", 12);
 	glutAddMenuEntry("Exponential", 13);
-	glutAddMenuEntry("Exponential square", 14);
+	glutAddMenuEntry("Exponential Square", 14);
+
+	submenu4_id = glutCreateMenu(menu);
+	glutAddMenuEntry("No", 15);
+	glutAddMenuEntry("Yes", 16);
 
 	menu_id = glutCreateMenu(menu);
 	glutAddMenuEntry("Default View Point", 1);
@@ -527,7 +583,8 @@ void createMenu(void) {
 	glutAddSubMenu("Shading", submenu0_id);
 	glutAddSubMenu("Ligth Source", submenu1_id);
 	glutAddSubMenu("Wire Frame", submenu2_id);
-	glutAddSubMenu("Fog options", submenu3_id);
+	glutAddSubMenu("Fog Options", submenu3_id);
+	glutAddSubMenu("Texture Mapped Ground", submenu4_id);
 	glutAddMenuEntry("Quit", 0);
 
 	glutAttachMenu(GLUT_LEFT_BUTTON);
