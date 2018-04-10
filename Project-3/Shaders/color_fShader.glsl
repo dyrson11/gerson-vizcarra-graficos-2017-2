@@ -13,11 +13,11 @@ uniform int fogOption;
 uniform bool ground;
 uniform sampler2D texture;
 
-in vec4 color;
-in vec4 fragPos;
-in vec2 texCoord;
+varying vec4 color;
+varying vec4 fragPos;
+varying vec2 texCoord;
 
-varying out vec4 fColor;
+vec4 fColor;
 
 void main()
 {
@@ -46,4 +46,5 @@ void main()
 
        fColor = mix(fogColor, fColor, fogFactor);
     }
+    gl_FragColor = fColor;
 }

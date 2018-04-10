@@ -49,9 +49,9 @@ struct SpotLight {
 vec4 fogColor = vec4(0.7, 0.7, 0.7, 0.5);
 float FogDensity = 0.09;
 float fogFactor, dist;
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 texCoord;
+varying vec3 FragPos;
+varying vec3 Normal;
+varying vec2 texCoord;
 
 uniform vec3 globalAmbientLight;
 uniform vec3 viewPos;
@@ -125,7 +125,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     return (ambient + diffuse + specular);
 }
 
-varying out vec4 FragColor;
+vec4 FragColor;
 
 void main()
 {
@@ -169,4 +169,5 @@ void main()
 
        FragColor = mix(fogColor, FragColor, fogFactor);
     }
+    gl_FragColor = FragColor;
 }

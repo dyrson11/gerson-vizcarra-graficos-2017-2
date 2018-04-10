@@ -12,7 +12,7 @@ find_package(GLEW REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS})
 
 # Add an executable named Example using the specified source file(s).
-add_executable(RotateCubeNew rotate-cube-new.cpp InitShader.cpp)
+add_executable(main main.cpp InitShader.cpp)
 
 # Link the executable to given libraries.
-target_link_libraries(RotateCubeNew ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(main ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
