@@ -1,11 +1,11 @@
 #version 120
 
-in  vec3 vPosition;
-in  vec3 vColor;
-in  vec3 vNormal;
+attribute  vec3 vPosition;
+attribute  vec3 vColor;
+attribute  vec3 vNormal;
 //varying out vec4 color;
-varying out vec3 Normal;
-varying out vec3 FragPos;
+varying vec3 Normal;
+varying vec3 FragPos;
 
 uniform mat4 model;
 uniform mat4 imodel;

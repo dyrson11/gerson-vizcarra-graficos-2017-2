@@ -12,9 +12,9 @@
 #version 120  // YJC: Comment/un-comment this line to resolve compilation errors
                  //      due to different settings of the default GLSL version
 
-in  vec3 vPosition;
-in  vec3 vColor;
-varying out vec4 color;
+attribute  vec3 vPosition;
+attribute  vec3 vColor;
+varying vec4 color;
 
 uniform mat4 model;
 uniform mat4 view;

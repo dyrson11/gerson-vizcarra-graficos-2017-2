@@ -318,7 +318,8 @@ void display(void)
 
 void idle(void)
 {
-	angle += 0.05*180 / M_PI;
+	float speed = 0.5;//SPEED OF THE BALL ROTATION
+	angle += speed*180 / M_PI;
 	switch (flagr)
     {
 	case 1:

@@ -46,8 +46,8 @@ struct SpotLight {
 };
 
 
-in vec3 FragPos;
-in vec3 Normal;
+varying vec3 FragPos;
+varying vec3 Normal;
 uniform vec3 globalAmbientLight;
 uniform vec3 viewPos;
 uniform bool pLight;
@@ -117,8 +117,6 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     return (ambient + diffuse + specular);
 }
 
-varying out vec4 FragColor;
-
 void main()
 {
     vec3 norm = normalize(Normal);
@@ -135,5 +133,5 @@ void main()
     }
     // phase 3: spot light
     result = result + globalAmbientLight * material.ambient;
-    FragColor = vec4(result, 1.0);
+    gl_FragColor = vec4(result, 1.0);
 }
